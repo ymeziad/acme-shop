@@ -12,13 +12,15 @@ export async function checkout(
     throw new Error("Cart total must be greater than zero");
   }
 
-  const charge = await stripe.charges.create({
+  const paymentIntent = await stripe.paymentIntents.create({
     amount,
     currency: cart.currency,
     customer: customerId,
-    source: paymentMethodId,
+    payment_method: paymentMethodId,
+    confirm: true,
+    automatic_payment_methods: { enabled: true, allow_redirects: "never" },
     description: `Acme Shop order (${cart.items.length} items)`,
   });
 
-  return { ok: charge.paid, id: charge.id };
+  return { ok: paymentIntent.status === "succeeded", id: paymentIntent.id };
 }
