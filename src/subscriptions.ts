@@ -18,14 +18,16 @@ export async function renewSubscription(
   customerId: string,
   paymentMethodId: string,
 ): Promise<PaymentOutcome> {
-  const charge = await stripe.charges.create({
+  const paymentIntent = await stripe.paymentIntents.create({
     amount: planPrice(plan),
     currency: "usd",
     customer: customerId,
-    source: paymentMethodId,
+    payment_method: paymentMethodId,
+    confirm: true,
+    automatic_payment_methods: { enabled: true, allow_redirects: "never" },
     description: `Acme ${plan} plan renewal`,
     metadata: { plan },
   });
 
-  return { ok: charge.paid, id: charge.id };
+  return { ok: paymentIntent.status === "succeeded", id: paymentIntent.id };
 }
